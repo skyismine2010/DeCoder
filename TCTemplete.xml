@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+    <Msg pos="" type="dim" ChangeField="xxx.xxx.xx">
+        <RawCode>0100008c8000010100000000000000010860000100000108400000167374612e737072696e742e636f6d00000000012840000012737072696e742e636f6d0000000001014000000e00010a1e60c800000000010a4000000c000028af0000010d000000154c616e64736c69646548534757000000000001024000000c01000022000001164000000c4f32a086</RawCode>
+    </Msg>
+
+    <ChangeField name="ULR_Flags">
+        <Feild1 type="HexString">00</Feild1>
+        <Feild2 type="HexString">02</Feild2>
+    </ChangeField>
+</Root>
