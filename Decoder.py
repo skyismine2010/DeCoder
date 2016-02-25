@@ -65,7 +65,6 @@ class DimConverter():
         stripHdr(self.ObjH, self.strRawCode)
         self.listAVPs = splitMsgAVPs(self.ObjH.msg)
 
-    def
 
 
 
