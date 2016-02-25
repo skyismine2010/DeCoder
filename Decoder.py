@@ -1,6 +1,7 @@
 from libDiameter import *
 import xml.etree.cElementTree as ET
 
+
 def loadTCTemplete(str):
     root = ET.parse(str).getroot()
     for msgElement in root.findall("Msg"):
@@ -10,7 +11,45 @@ def loadTCTemplete(str):
 
 
 
+class TestCaseXmlTPL():
+    def __init__(self, pathStr):
+        self.root = ET.parse(pathStr).getroot()
 
+        self.msgsList = []
+        self.readMsgTag()
+
+        self.changeFieldsDict = {}
+        self.readChangeFieldTag()
+
+
+    def readMsgTag(self):
+
+        for msgTagElement in self.root.findall("Msg"):
+            msgList = []
+            msgList.append(msgTagElement.get("name"))
+            msgList.append(msgTagElement.get("type"))
+            msgList.append(msgTagElement.find("RawCode").text)
+
+            changeFieldList =[]
+            for changeFieldTag in msgTagElement.findall("ChangeFieldName"):
+                changeFieldList.append(changeFieldTag.text)
+
+            msgList.append(changeFieldList)
+
+        self.msgsList.append(msgList)
+
+
+
+
+    def readChangeFieldTag(self):
+        for cFTagElement in self.root.findall("ChangeField"):
+            fieldList = []
+            for field in cFTagElement.findall("Feild"):
+                fieldDict = {}
+                fieldDict["type"] = field.get("type")
+                fieldDict["field"] = field.text
+                fieldList.append(fieldDict)
+            self.changeFieldsDict[cFTagElement.get("name")] = fieldList
 
 
 class DimConverter():
@@ -47,6 +86,9 @@ if __name__ =="__main__":
     #   print "RAW AVP",avp
     #   print "Decoded AVP",decodeAVP(avp)
     # print "-"*30
+
     loadTCTemplete("TCTemplete.xml")
+    tcXmlTplObj = TestCaseXmlTPL("TCTemplete.xml")
+
 
 
