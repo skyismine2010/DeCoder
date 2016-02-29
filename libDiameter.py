@@ -587,7 +587,7 @@ def encodeAVP(AVP_Name,AVP_Value):
 def calc_padding(msg_len):
     return (msg_len+3)&~3 
 
-#----------------------------------------------------------------------    
+#----------------------------------------------------------------------
 ################################
 # Main decoding routine  
 # Input: single AVP as HEX string
