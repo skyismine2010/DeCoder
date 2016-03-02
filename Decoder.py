@@ -1,5 +1,4 @@
 from libDiameter import *
-from libDiameterEx import *
 import xml.etree.cElementTree as ET
 
 
@@ -42,15 +41,29 @@ class TestCaseXmlTPL():
             self.msgList.append(Message(msgTagElement))
 
 
+
 class DimConverter():
     def __init__(self, msgObj):
         self.ObjH = HDRItem()
         self.AVPsList = []
         self.msgObj = msgObj
         stripHdr(self.ObjH, self.msgObj.rawCodeStr)
-        for avp in splitMsgAVPs(self.ObjH.msg):
-            self.AVPsList.append(decodeAVP(avp))
+        for avpRaw in splitMsgAVPs(self.ObjH.msg):
+            avpKeyStr = self.getAVPKey(avpRaw, self.ObjH.cmd)
+            self.AVPsList.append((avpKeyStr, decodeAVP(avpRaw)))
 
+        for avpTuple in self.AVPsList:
+            print(avpTuple)
+
+
+    def getAVPKey(self,avpRaw, cmdCode):
+        avpCode = struct.unpack("!I",avpRaw[0:8].decode("hex"))[0]
+        avpFlag = struct.unpack("!B",avpRaw[8:10].decode("hex"))[0]
+        if avpFlag & DIAMETER_FLAG_VENDOR:
+            vendorID = struct.unpack("!I", avpRaw[16:24].decode("hex"))[0]
+        else:
+            vendorID = 0
+        return ("%d.%d_%d" % (cmdCode, avpCode, vendorID))
 
 
     def printDecodeResult(self):
@@ -66,19 +79,14 @@ class DimConverter():
           print "Decoded AVP",decodeAVP(avp)
         print "-"*30
 
+
+
     def converter(self):
         rawCodeList = []
         for changeFieldObj in self.msgObj.changeFieldList:
             nameStr = changeFieldObj.nameStr
             for field in changeFieldObj:
                 pass
-
-
-    def findAVPByName(self):
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -88,7 +96,7 @@ if __name__ == '__main__':
         if msgObj.typeStr == "dim":
             converterObj = DimConverter(msgObj)
             #converterObj.printDecodeResult()
-            converterObj.converter()
+           # converterObj.converter()
 
 
 
