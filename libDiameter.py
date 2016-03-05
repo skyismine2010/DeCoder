@@ -38,6 +38,7 @@ class AVPItem:
         self.vendor=0
         self.type=""
         self.mandatory=""
+
         
 class HDRItem:
     def __init__(self):
@@ -376,11 +377,11 @@ def decode_UTF8String(data,dlen):
     utf8=utf8decoder(ret)
     return utf8[0]
 
-def decode_Grouped(data):
+def decode_Grouped(data,avpKey):
     dbg="Decoding Grouped:"
     ret=[]
     for gmsg in splitMsgAVPs(data):
-        ret.append(decodeAVP(gmsg))
+        ret.append(decodeAVP(gmsg,avpKey))
     return ret
 
 #AVP_Time contains a second count since 1900    
@@ -587,11 +588,21 @@ def encodeAVP(AVP_Name,AVP_Value):
 def calc_padding(msg_len):
     return (msg_len+3)&~3 
 
+
+# def getAVPKey(avp,cmdCode):
+#     vendorID = 0
+#     avpCode = struct.unpack("!I",avp[0:8].decode("hex"))[0]
+#     avpFlag = struct.unpack("!B",avp[8:10].decode("hex"))[0]
+#     if avpFlag & DIAMETER_FLAG_VENDOR:
+#         vendorID = struct.unpack("!I", avp[16:24].decode("hex"))[0]
+#     return ("%d.%d_%d" % (cmdCode, avpCode, vendorID))
+
+
 #----------------------------------------------------------------------
 ################################
 # Main decoding routine  
 # Input: single AVP as HEX string
-def decodeAVP(msg):
+def decodeAVP(msg, prefixName):
     (scode,msg)=chop_msg(msg,8)
     (sflag,msg)=chop_msg(msg,2)
     (slen,msg)=chop_msg(msg,6)
@@ -607,6 +618,9 @@ def decodeAVP(msg):
         data_len-=4
     A=AVPItem()
     dictAVPcode2name(A,mcode,mvid)
+    avpKey = ("%d_%d" % (mcode, mvid))
+    prefixName += "."
+    prefixName += avpKey
     dbg="Read","N",A.name,"T",A.type,"C",A.code,"F",mflags,"L",data_len,"V",A.vendor,mvid,"D",msg
     logging.debug(dbg)
     ret=""
@@ -654,14 +668,14 @@ def decodeAVP(msg):
     if A.type=="Grouped":
         decoded=True
         logging.debug("Decoding Grouped")
-        ret= decode_Grouped(msg)
+        ret= decode_Grouped(msg,prefixName)
     if not decoded:
       # default is OctetString
       logging.debug("Decoding OctetString")
       ret= decode_OctetString(msg,data_len)
     dbg="Decoded as",A.name,ret
     logging.info(dbg)
-    return (A.name,ret)
+    return (prefixName, A.name,ret)
 
 # Search for AVP in undecoded list
 # Return value if exist, ERROR if not    

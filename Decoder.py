@@ -1,6 +1,6 @@
+import copy
 from libDiameter import *
 from TestCaseCfgTemplete import *
-
 
 
 class DimConverter():
@@ -10,7 +10,7 @@ class DimConverter():
         stripHdr(self.ObjH, self.msgObj.rawCodeStr)
         self.avpsList = []
         for avpRaw in splitMsgAVPs(self.ObjH.msg):
-            self.avpsList.append(decodeAVP(avpRaw, self.ObjH.cmd))
+            self.avpsList.append(decodeAVP(avpRaw,str(self.ObjH.cmd)))
 
 
     def __str__(self):
@@ -30,34 +30,58 @@ class DimConverter():
         return tmpAVPsList
 
 
-    def replaceAvpsList(self, nameStr, fieldObj):
-        pass
-
-
     def encodeNewRawCode(self, newAvpList):
-        pass
+        avps = []
+        for avp in newAvpList:
+            avps.append(encodeAVP(avp[1],avp[2]))
+        ret = createRes(self.ObjH, avps)
+        print(ret)
 
 
-    def replaceByChangeField(self, changeFieldObj,resultList):
+
+    def findAvpByAvpCodeVendorID(self, avpName, avpList):
+        for avp in avpList:
+            if avp[0] == avpName:
+                return avp
+            elif isinstance(avp[2], list):
+                tmp = self.findAvpByAvpCodeVendorID(avpName, avp[2])
+                if tmp != None:
+                    return tmp
+        return None
+
+
+
+    def replaceAvpsListByField(self, nameStr, fieldObj, oldAvpList):
+        newAvpList = copy.deepcopy(oldAvpList)
+        avp = self.findAvpByAvpCodeVendorID(nameStr, newAvpList)
+        if avp == None:
+            print("Can not find AVP in RawCode,please check it is right or not.")
+            return
+        avp[2] = fieldObj.valStr
+        return newAvpList
+
+
+    def replaceAvpsListByChangeField(self, changeFieldObj, oldAvpList):
+        resultList = []
         for field in changeFieldObj.fieldList:
-            newAvpList = self.replaceAvpsList(changeFieldObj.changeFieldNameStr, field)
+            newAvpList = self.replaceAvpsListByField(changeFieldObj.changeFieldNameStr, field, oldAvpList)
+            resultList.append(newAvpList)
+        print("herererer %d" % len(resultList))
+        return resultList
 
 
     def converter(self):
-        resultList = [].append(self.tuple2List(self.avpsList))
+        tmpResultList = []
+        tmpResultList.append(self.tuple2List(self.avpsList))
+
         for changeFieldObj in self.msgObj.changeFieldList:
-            for tmpResult in resultList:
-                newResultList = self.replaceByChangeField(changeFieldObj, tmpResult)
-            resultList = newResultList
+            newTmpResultList = []
+            for tmpResult in tmpResultList:
+                newTmpResultList = self.replaceAvpsListByChangeField(changeFieldObj, tmpResult)
+            tmpResultList = newTmpResultList
 
-        for result in resultList:
+        for result in tmpResultList:
             self.encodeNewRawCode(result)
-
-
-
-
-
-
 
 
 
@@ -67,8 +91,8 @@ if __name__ == '__main__':
     for msgObj in tcXmlTplObj.msgList:
         if msgObj.typeStr == "dim":
             converterObj = DimConverter(msgObj)
-            print(converterObj)
-            #converterObj.converter()
+            print("$"*30)
+            converterObj.converter()
 
 
 
